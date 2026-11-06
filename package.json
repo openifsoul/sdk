@@ -1,0 +1,44 @@
+{
+  "name": "@ifsoul/adapter-sdk",
+  "version": "0.1.0-alpha.1",
+  "description": "Experimental bounded IfSoul browser-host bridge and transport contracts",
+  "type": "module",
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc --noEmit --project tsconfig.json",
+    "test": "tsx --test tests/*.test.ts",
+    "check": "pnpm typecheck && pnpm test && pnpm build && pnpm test:package",
+    "demo:host": "tsx apps/test-host/src/index.ts",
+    "prepack": "pnpm run build",
+    "test:package": "node --test tests/tooling/*.test.mjs"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "tsx": "4.23.15",
+    "@types/node": "22.20.5"
+  },
+  "packageManager": "pnpm@10.15.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openifsoul/sdk.git"
+  }
+}
