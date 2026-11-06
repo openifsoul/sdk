@@ -12,3 +12,11 @@ with `pnpm pack`. No npm publication, automatic CI, remote builds, schedules or
 deployments. Public repository creation and reviewed commits/pushes to
 https://github.com/openifsoul/sdk were authorized on 2026-11-06. Never commit
 secrets, personal data, generated logs, node_modules or unreviewed archives.
+
+## Authorized release on 2026-11-06
+
+The owner authorized preparation, reviewed Git commits/pushes, and manual production
+publication through private Cloud after coordinator review and local gates. This
+supersedes the split-only deployment restriction for this release. Checks and builds
+remain local; no npm publication, automatic remote execution, settings changes,
+secret operation or data migration is authorized. A Git push does not deploy.

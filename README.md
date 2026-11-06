@@ -26,8 +26,12 @@ server, application configuration or credential is included.
 An application supplies a transport, bounded history callbacks, a character and
 an AbortSignal. The SDK binds decide/speak/chat requests to that character,
 validates replies and reports their `scenario`, `llm` or `fallback` source.
-The current character shape supports only the experimental `careful`, `bold` and
-`curious` temperaments. It is not a universal character model.
+Temperament is a bounded nonempty string (160 characters), supplied by the host.
+The three first-party voices are example content, not a generic character model.
+An optional language is a locale tag accepted by `Intl.getCanonicalLocales`,
+bounded to 64 characters (for example `fr` or `ja-JP`). A tag requests language;
+it does not prove provider support. Generic synthetic speech currently has English
+and Russian copy; other tags receive neutral English speech.
 
 The application envelope is `ifsoul-bridge/0.1`, distinct from the frozen
 normative v0.2 protocol and not an archive format or full EnvironmentBridge
@@ -117,8 +121,11 @@ player-requested chat through this method; each game owns its bubble, animation,
 positioning, reduced-motion behavior and cleanup. It grants no action authority
 and adds nothing to the bridge wire envelope. Game-requested dialogue is shown by
 the host after its existing freshness checks. Silent planning results are valid.
-Scenario/fallback dialogue uses authored in-character reactions rather than
-repeating untrusted host reports; its source label remains explicit.
+The generic `scenarioResponse` supplies neutral authored speech and the advertised
+fallback choice, without interpreting reports, cataloging worlds or claiming recall.
+Hosts may inject a synchronous `fallback(request)` returning a validated response;
+the SDK always labels it `fallback`. First-party game scenarios live in their owning
+examples; cross-game authored fiction lives in Website composition.
 
 ## Standalone development
 
@@ -136,4 +143,67 @@ pnpm pack
 Checks and builds run locally. Distribution uses reviewed pinned tarballs with
 SHA-256 provenance in each consumer; npm publication and remote CI are not
 configured. The original three game packages remain compatible with this
-unchanged experimental SDK API. See [agent policy](AGENTS.md).
+experimental SDK signatures. The generic scenario behavior intentionally replaces
+the earlier built-in three-game fiction; consumers requiring authored domain reactions
+must supply their own scenario transport/fallback. This is an experimental behavioral
+change, not a frozen normative protocol change. See [agent policy](AGENTS.md).
+
+### Non-browser hosts
+
+`@ifsoul/adapter-sdk/bridge` exposes the bounded connection, validators, transport
+and character/report types without importing browser mounting declarations.
+The root keeps the existing `MountGame`/`HTMLElement` browser types for compatibility.
+Node hosts use standard Fetch/Abort APIs (Node 22+) and matching Node type definitions;
+no DOM runtime, game engine or built-in world ID is required. This narrow bridge is
+not full production support for every game/service: negotiation, authority, authentication,
+identity mapping and lifecycle integration still belong to each host composition.
+
+The synthetic CLI optionally uses `IFSOUL_DEMO_SERVER` with `/api/bridge` and
+explicit `IFSOUL_DEMO_PROVIDER` and `IFSOUL_DEMO_MODEL` selections. Without a
+server, the CLI uses its local synthetic transport. A composition may accept an optional
+`IFSOUL_DEMO_TOKEN` bearer credential; the SDK does not assume a particular identity
+provider. The local self-hostable App supplies this endpoint. Managed compositions
+may expose a different endpoint and must provide their own transport integration.
+
+### Connect the CLI to the public local App
+
+Start the independent public `openifsoul/app` checkout with `pnpm start`
+(default `http://127.0.0.1:8788`). In App Settings, connect local Ollama and
+select a model already installed in Ollama. Then, from this SDK checkout:
+
+```sh
+IFSOUL_DEMO_SERVER=http://127.0.0.1:8788 \
+IFSOUL_DEMO_PROVIDER=ollama \
+IFSOUL_DEMO_MODEL=qwen3:8b \
+pnpm demo:host
+```
+
+Replace `qwen3:8b` with an available model shown in App Settings. This may invoke
+three real generations (two decisions and one chat); model availability, speed
+and output remain provider-dependent. The CLI sends explicit `provider` and
+`model` query parameters to the public `/api/bridge` endpoint. Server mode rejects
+missing/unsupported selection configuration rather than selecting `scenario`.
+Local Ollama requests use a 60-second host deadline; other connections retain the
+SDK's default 18-second deadline. Neither deadline guarantees inference stopped
+remotely after fallback. Without `IFSOUL_DEMO_SERVER`, `pnpm demo:host` remains a
+free deterministic scenario with no model or account.
+
+This path needs only the public App and SDK checkouts plus local Ollama; it
+requires no private Website/Cloud checkout, hosted account or provider credential
+inside the SDK. App owns provider configuration and memory. The three standalone
+example shells currently offer scenario play or an already configured
+`/api/demo/bridge` proxy via `IFSOUL_API_ORIGIN`; they do not expose generic App
+provider/model/language/timeout settings. An integrator can pass `language` and
+`requestTimeoutMs` directly to `createGameBridge` in its own composition.
+
+## Server-side memory continuity
+
+The SDK relays attributed observations; it owns no memory store or inference
+engine. App composes persistent evidence, bounded episodes, scoped recall and
+revisable interpretations behind a trusted owner store. See the
+[App memory architecture](https://github.com/openifsoul/app/blob/main/docs/memory.md)
+for the diagram, portable relationship scope, reset and remaining limits.
+Observation delivery/authentication and stable player identity mapping remain
+composition responsibilities.
+
+Hosts may set `createGameBridge({ requestTimeoutMs })` to an integer from 1 to 60000 milliseconds. The default remains 18000 milliseconds. For example, a localhost composition may select 35000 milliseconds for a slower local model. This host-side time budget does not change the bridge wire format or grant authority; cancellation and fallback remain enforced.

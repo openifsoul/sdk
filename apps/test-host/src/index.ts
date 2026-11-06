@@ -2,12 +2,15 @@ import {
   createGameBridge,
   createHTTPTransport,
   scenarioResponse,
-} from "../../../src/index.js";
-import type { BridgeHistory, BridgeTransport } from "../../../src/index.js";
+} from "../../../src/bridge.js";
+import type { BridgeHistory, BridgeTransport } from "../../../src/bridge.js";
+
+class DemoConfigurationError extends Error {}
 
 /** Separate process example: the host executes mechanics, never the model. */
 async function main() {
   const server = process.env.IFSOUL_DEMO_SERVER;
+  let requestTimeoutMs: number | undefined;
   let transport: BridgeTransport = async (request) => scenarioResponse(request);
   if (server) {
     const url = new URL(server);
@@ -19,29 +22,39 @@ async function main() {
       )
     )
       throw Error("Use HTTPS or a local loopback demo server.");
-    const token = process.env.IFSOUL_DEMO_TOKEN;
-    if (url.protocol === "https:" && !token)
-      throw Error(
-        "Set IFSOUL_DEMO_TOKEN to a current Clerk session token for cloud mode.",
+    const provider = process.env.IFSOUL_DEMO_PROVIDER;
+    const model = process.env.IFSOUL_DEMO_MODEL;
+    if (
+      !provider ||
+      !["ollama", "openai", "cloudflare"].includes(provider) ||
+      !model ||
+      !/^[A-Za-z0-9@][A-Za-z0-9@._:/-]{0,127}$/.test(model)
+    )
+      throw new DemoConfigurationError(
+        "Server mode requires IFSOUL_DEMO_PROVIDER=ollama|openai|cloudflare and IFSOUL_DEMO_MODEL set to an available model. Configure the provider in App Settings first."
       );
-    transport = createHTTPTransport(
-      new URL("/api/demo/bridge", url).href,
-      (input, init) =>
-        fetch(input, {
-          ...init,
-          redirect: "error",
-          headers: {
-            ...Object.fromEntries(new Headers(init?.headers)),
-            ...(token ? { authorization: `Bearer ${token}` } : {}),
-            origin: url.origin,
-          },
-        }),
+    requestTimeoutMs = provider === "ollama" ? 60000 : undefined;
+    const token = process.env.IFSOUL_DEMO_TOKEN;
+    const endpoint = new URL("/api/bridge", url);
+    endpoint.searchParams.set("provider", provider);
+    endpoint.searchParams.set("model", model);
+    transport = createHTTPTransport(endpoint.href, (input, init) =>
+      fetch(input, {
+        ...init,
+        redirect: "error",
+        headers: {
+          ...Object.fromEntries(new Headers(init?.headers)),
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+          origin: url.origin,
+        },
+      })
     );
   }
   const controller = new AbortController(),
     history: BridgeHistory[] = [];
   const bridge = createGameBridge({
     hostId: "test-host",
+    requestTimeoutMs,
     character: { id: "mira", name: "Mira", temperament: "careful" },
     signal: controller.signal,
     transport,
@@ -63,7 +76,9 @@ async function main() {
           : [{ id: "water-bed", label: "Water the one dry bed" }];
       const decision = await bridge.decide({
         requestId: `turn-${turn}-${crypto.randomUUID()}`,
-        context: `The test host has ${water} water and one ${watered ? "watered" : "dry"} bed.`,
+        context: `The test host has ${water} water and one ${
+          watered ? "watered" : "dry"
+        } bed.`,
         choices,
         fallbackChoiceId: choices[0].id,
       });
@@ -91,9 +106,11 @@ async function main() {
     bridge.dispose();
   }
 }
-main().catch(() => {
+main().catch((error: unknown) => {
   console.error(
-    "Test host failed. Check server, sign-in, and host prerequisites; credentials are never printed.",
+    error instanceof DemoConfigurationError
+      ? error.message
+      : "Test host failed. Check endpoint, authentication, and host prerequisites; credentials are never printed."
   );
   process.exitCode = 1;
 });
