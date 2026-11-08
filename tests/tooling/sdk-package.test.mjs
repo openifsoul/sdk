@@ -16,8 +16,8 @@ test("SDK archive installs and exposes runtime/types outside Core without regist
   try {
     await mkdir(path.join(directory, "vendor"));
     await copyFile(
-      path.join(root, ".local/packages/ifsoul-adapter-sdk-0.1.0-alpha.1.tgz"),
-      path.join(directory, "vendor/sdk.tgz")
+      path.join(root, ".local/packages/ifsoul-adapter-sdk-0.3.0.tgz"),
+      path.join(directory, "vendor/sdk.tgz"),
     );
     await writeFile(
       path.join(directory, "package.json"),
@@ -25,13 +25,13 @@ test("SDK archive installs and exposes runtime/types outside Core without regist
         private: true,
         type: "module",
         dependencies: { "@ifsoul/adapter-sdk": "file:vendor/sdk.tgz" },
-      })
+      }),
     );
     execFileSync("pnpm", ["install", "--offline", "--ignore-scripts"], {
       cwd: directory,
       stdio: "pipe",
     });
-    const consumer = `import {createGameBridge,scenarioResponse,BRIDGE_VERSION} from '@ifsoul/adapter-sdk';\nimport type {GameMountOptions,MountedGame,BridgeTransport} from '@ifsoul/adapter-sdk';\nconst transport:BridgeTransport=async request=>scenarioResponse(request);\nconst lifetime=new AbortController();\nconst bridge=createGameBridge({hostId:'external',character:{id:'original',name:'Original',temperament:'curious'},transport,history:()=>[],onObservation:()=>{},onSpeech:()=>{},signal:lifetime.signal});\nconst reply=await bridge.decide({requestId:'move',context:'Choose the only legal move.',choices:[{id:'wait',label:'Wait'}],fallbackChoiceId:'wait'});\nif(reply.choiceId!=='wait'||reply.source!=='scenario'||BRIDGE_VERSION!=='ifsoul-bridge/0.1')throw Error('Invalid external bridge result');\nbridge.dispose();\nexport type Contract=[GameMountOptions,MountedGame];`;
+    const consumer = `import {createGameBridge,scenarioResponse,BRIDGE_VERSION} from '@ifsoul/adapter-sdk';\nimport type {GameMountOptions,MountedGame,BridgeTransport} from '@ifsoul/adapter-sdk';\nconst transport:BridgeTransport=async request=>scenarioResponse(request);\nconst lifetime=new AbortController();\nconst bridge=createGameBridge({hostId:'external',character:{id:'original',name:'Original',temperament:'curious'},transport,history:()=>[],onObservation:()=>{},onSpeech:()=>{},signal:lifetime.signal});\nconst reply=await bridge.decide({requestId:'move',context:'Choose the only legal move.',choices:[{id:'wait',label:'Wait'}],fallbackChoiceId:'wait'});\nif(reply.choiceId!=='wait'||reply.source!=='scenario'||BRIDGE_VERSION!=='ifsoul-bridge/0.3.0')throw Error('Invalid external bridge result');\nbridge.dispose();\nexport type Contract=[GameMountOptions,MountedGame];`;
     await writeFile(path.join(directory, "consumer.ts"), consumer);
     await writeFile(
       path.join(directory, "tsconfig.json"),
@@ -46,7 +46,7 @@ test("SDK archive installs and exposes runtime/types outside Core without regist
           outDir: "out",
         },
         include: ["consumer.ts"],
-      })
+      }),
     );
     execFileSync(
       process.execPath,
@@ -55,7 +55,7 @@ test("SDK archive installs and exposes runtime/types outside Core without regist
         "--project",
         path.join(directory, "tsconfig.json"),
       ],
-      { cwd: directory, stdio: "pipe" }
+      { cwd: directory, stdio: "pipe" },
     );
     execFileSync(process.execPath, ["out/consumer.js"], {
       cwd: directory,
@@ -69,7 +69,7 @@ const transport:BridgeTransport=async request=>scenarioResponse(request);
 const bridge=createGameBridge({hostId:'observatory-service',character:{id:'archivist',name:'Neri',temperament:'patient archivist'},transport,history:()=>[],onObservation:()=>{},onSpeech:()=>{},signal:new AbortController().signal});
 const reply=await bridge.decide({requestId:'schedule',context:'Select a permitted appointment.',choices:[{id:'wait',label:'Wait'}],fallbackChoiceId:'wait'});
 if(reply.choiceId!=='wait')throw Error('Unknown host choice');
-bridge.dispose();`
+bridge.dispose();`,
     );
     await writeFile(
       path.join(directory, "tsconfig.service.json"),
@@ -85,7 +85,7 @@ bridge.dispose();`
           outDir: "service-out",
         },
         include: ["service.ts"],
-      })
+      }),
     );
     execFileSync(
       process.execPath,
@@ -94,7 +94,7 @@ bridge.dispose();`
         "--project",
         path.join(directory, "tsconfig.service.json"),
       ],
-      { cwd: directory, stdio: "pipe" }
+      { cwd: directory, stdio: "pipe" },
     );
     execFileSync(process.execPath, ["service-out/service.js"], {
       cwd: directory,
@@ -103,7 +103,7 @@ bridge.dispose();`
     const frozen = execFileSync(
       "pnpm",
       ["install", "--offline", "--frozen-lockfile", "--ignore-scripts"],
-      { cwd: directory, encoding: "utf8" }
+      { cwd: directory, encoding: "utf8" },
     );
     assert.match(frozen, /up to date|Already up to date|Lockfile/);
   } finally {

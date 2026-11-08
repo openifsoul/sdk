@@ -1,12 +1,12 @@
 # @ifsoul/adapter-sdk
 
-Experimental installable prerelease **0.1.0-alpha.1**. This package builds ESM
+Experimental installable **IfSoul 0.3.0**. This package builds ESM
 JavaScript and TypeScript declarations and supports browser hosts and Node 22+
 test hosts without a game engine, account, provider or adjacent Core checkout.
 It has **not been published to npm**. Install a supplied local archive:
 
 ```sh
-pnpm add ./ifsoul-adapter-sdk-0.1.0-alpha.1.tgz
+pnpm add ./ifsoul-adapter-sdk-0.3.0.tgz
 ```
 
 ```ts
@@ -33,14 +33,14 @@ bounded to 64 characters (for example `fr` or `ja-JP`). A tag requests language;
 it does not prove provider support. Generic synthetic speech currently has English
 and Russian copy; other tags receive neutral English speech.
 
-The application envelope is `ifsoul-bridge/0.1`, distinct from the frozen
+The application envelope is `ifsoul-bridge/0.3.0`, distinct from the frozen
 normative v0.2 protocol and not an archive format or full EnvironmentBridge
 handshake. Public declarations describe its exact current shape.
 
 - A decision advertises at most eight unique host-owned choices and one allowed
   fallback. A response cannot introduce another choice. Speak/chat have no action
   choices. The caller must check current legality and freshness before adoption.
-- Requests have at most 8,000 serialized UTF-8 bytes. The validator accepts at
+- By default, requests have at most 8,000 serialized UTF-8 bytes. The validator accepts at
   most twelve history entries; `createGameBridge` sends the last eight with
   summaries capped at 240 characters. Responses allow at most 600 speech
   characters; HTTP reads stop above 8,192 bytes.
@@ -134,15 +134,19 @@ host under `apps/test-host`. It installs and builds without Core, App, Cloud or
 Website checkouts and requires no account for its default scenario mode.
 
 ```sh
+git clone https://github.com/openifsoul/sdk.git
+cd sdk
 pnpm install --frozen-lockfile
 pnpm check
 pnpm demo:host
 pnpm pack
 ```
 
-Checks and builds run locally. Distribution uses reviewed pinned tarballs with
-SHA-256 provenance in each consumer; npm publication and remote CI are not
-configured. The original three game packages remain compatible with this
+Release checks and builds run locally. GitHub Actions checks on push and pull
+requests are authorized by the [execution policy](docs/deployment.md); activation
+and a passing result require an actual published workflow run. Distribution uses
+reviewed pinned tarballs with SHA-256 provenance in each consumer; npm publication
+is not configured. The original three game packages remain compatible with this
 experimental SDK signatures. The generic scenario behavior intentionally replaces
 the earlier built-in three-game fiction; consumers requiring authored domain reactions
 must supply their own scenario transport/fallback. This is an experimental behavioral
@@ -196,6 +200,11 @@ example shells currently offer scenario play or an already configured
 provider/model/language/timeout settings. An integrator can pass `language` and
 `requestTimeoutMs` directly to `createGameBridge` in its own composition.
 
+A staged [Minecraft + Mineflayer bridge guide](docs/mineflayer-bridge.md) explains
+host identity, observations, budgets and acceptance work. It is a research and
+implementation guide; native acceptance and supported releases belong to the
+owning adapter’s documented evidence.
+
 ## Server-side memory continuity
 
 The SDK relays attributed observations; it owns no memory store or inference
@@ -206,4 +215,14 @@ for the diagram, portable relationship scope, reset and remaining limits.
 Observation delivery/authentication and stable player identity mapping remain
 composition responsibilities.
 
-Hosts may set `createGameBridge({ requestTimeoutMs })` to an integer from 1 to 60000 milliseconds. The default remains 18000 milliseconds. For example, a localhost composition may select 35000 milliseconds for a slower local model. This host-side time budget does not change the bridge wire format or grant authority; cancellation and fallback remain enforced.
+The legacy alias allows hosts to set `createGameBridge({ requestTimeoutMs })` to an integer from 1 to 60000 milliseconds. The default remains 18000 milliseconds. For example, a localhost composition may select 35000 milliseconds for a slower local model. This host-side time budget does not change the bridge wire format or grant authority; cancellation and fallback remain enforced.
+
+For operator-configured limits, runtime server capability and the supported buffered boundary, see [resource budgets](docs/resource-budgets.md). Default envelopes remain unchanged; larger HTTP packets do not imply larger model context.
+
+## Current release and compatibility
+
+The current coordinated release is **IfSoul 0.3.0**. Package, current-format and
+artifact identifiers share this release. Historical formats remain explicit
+compatibility inputs; matching release numbers do not make different format
+families interchangeable. See [compatibility](docs/compatibility.md).
+Registry publication and deployment are separate authorized release actions.

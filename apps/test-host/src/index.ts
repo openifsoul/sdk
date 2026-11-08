@@ -1,15 +1,44 @@
+import { readFileSync } from "node:fs";
 import {
   createGameBridge,
   createHTTPTransport,
   scenarioResponse,
+  resolveBridgeLimits,
 } from "../../../src/bridge.js";
-import type { BridgeHistory, BridgeTransport } from "../../../src/bridge.js";
+import type {
+  BridgeHistory,
+  BridgeTransport,
+  BridgeLimits,
+} from "../../../src/bridge.js";
 
 class DemoConfigurationError extends Error {}
 
 /** Separate process example: the host executes mechanics, never the model. */
 async function main() {
   const server = process.env.IFSOUL_DEMO_SERVER;
+  let configuredLimits: Partial<BridgeLimits> | undefined;
+  if (
+    process.env.IFSOUL_BRIDGE_RESOURCE_POLICY &&
+    process.env.IFSOUL_BRIDGE_RESOURCE_POLICY_FILE
+  )
+    throw new DemoConfigurationError(
+      "Select one bridge resource policy source.",
+    );
+  const policyText =
+    process.env.IFSOUL_BRIDGE_RESOURCE_POLICY ??
+    (process.env.IFSOUL_BRIDGE_RESOURCE_POLICY_FILE
+      ? readFileSync(process.env.IFSOUL_BRIDGE_RESOURCE_POLICY_FILE, "utf8")
+      : undefined);
+  if (policyText !== undefined) {
+    try {
+      configuredLimits = JSON.parse(policyText) as Partial<BridgeLimits>;
+      resolveBridgeLimits(configuredLimits);
+    } catch {
+      throw new DemoConfigurationError(
+        "The bridge resource policy must be a supported bounded JSON object.",
+      );
+    }
+  }
   let requestTimeoutMs: number | undefined;
   let transport: BridgeTransport = async (request) => scenarioResponse(request);
   if (server) {
@@ -31,30 +60,50 @@ async function main() {
       !/^[A-Za-z0-9@][A-Za-z0-9@._:/-]{0,127}$/.test(model)
     )
       throw new DemoConfigurationError(
-        "Server mode requires IFSOUL_DEMO_PROVIDER=ollama|openai|cloudflare and IFSOUL_DEMO_MODEL set to an available model. Configure the provider in App Settings first."
+        "Server mode requires IFSOUL_DEMO_PROVIDER=ollama|openai|cloudflare and IFSOUL_DEMO_MODEL set to an available model. Configure the provider in App Settings first.",
       );
     requestTimeoutMs = provider === "ollama" ? 60000 : undefined;
     const token = process.env.IFSOUL_DEMO_TOKEN;
     const endpoint = new URL("/api/bridge", url);
     endpoint.searchParams.set("provider", provider);
     endpoint.searchParams.set("model", model);
-    transport = createHTTPTransport(endpoint.href, (input, init) =>
-      fetch(input, {
-        ...init,
-        redirect: "error",
-        headers: {
-          ...Object.fromEntries(new Headers(init?.headers)),
-          ...(token ? { authorization: `Bearer ${token}` } : {}),
-          origin: url.origin,
-        },
-      })
+    const transportLimits = configuredLimits
+      ? {
+          ...configuredLimits,
+          timeoutMs: configuredLimits.timeoutMs ?? requestTimeoutMs ?? 18000,
+        }
+      : undefined;
+    transport = createHTTPTransport(
+      endpoint.href,
+      (input, init) =>
+        fetch(input, {
+          ...init,
+          redirect: "error",
+          headers: {
+            ...Object.fromEntries(new Headers(init?.headers)),
+            ...(token ? { authorization: `Bearer ${token}` } : {}),
+            origin: url.origin,
+          },
+        }),
+      {
+        limits: transportLimits,
+        ...(process.env.IFSOUL_DEMO_SHOW_BUDGET === "1"
+          ? {
+              onBudget: (report) =>
+                console.log(
+                  JSON.stringify({ event: "resource-policy", ...report }),
+                ),
+            }
+          : {}),
+      },
     );
   }
   const controller = new AbortController(),
     history: BridgeHistory[] = [];
   const bridge = createGameBridge({
     hostId: "test-host",
-    requestTimeoutMs,
+    requestTimeoutMs: configuredLimits?.timeoutMs ?? requestTimeoutMs,
+    limits: configuredLimits,
     character: { id: "mira", name: "Mira", temperament: "careful" },
     signal: controller.signal,
     transport,
@@ -110,7 +159,7 @@ main().catch((error: unknown) => {
   console.error(
     error instanceof DemoConfigurationError
       ? error.message
-      : "Test host failed. Check endpoint, authentication, and host prerequisites; credentials are never printed."
+      : "Test host failed. Check endpoint, authentication, and host prerequisites; credentials are never printed.",
   );
   process.exitCode = 1;
 });

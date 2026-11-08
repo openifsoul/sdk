@@ -1,13 +1,15 @@
 {
   "name": "@ifsoul/adapter-sdk",
-  "version": "0.1.0-alpha.1",
+  "version": "0.3.0",
   "description": "Experimental bounded IfSoul browser-host bridge and transport contracts",
   "type": "module",
   "license": "Apache-2.0",
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "docs",
+    "release.json"
   ],
   "exports": {
     ".": {
@@ -31,10 +33,11 @@
     "build": "tsc --project tsconfig.build.json",
     "typecheck": "tsc --noEmit --project tsconfig.json",
     "test": "tsx --test tests/*.test.ts",
-    "check": "pnpm typecheck && pnpm test && pnpm build && pnpm test:package",
+    "check": "pnpm check:version && pnpm typecheck && pnpm test && pnpm build && pnpm test:package",
     "demo:host": "tsx apps/test-host/src/index.ts",
     "prepack": "pnpm run build",
-    "test:package": "node --test tests/tooling/*.test.mjs"
+    "test:package": "node --test tests/tooling/*.test.mjs",
+    "check:version": "node scripts/check-version.mjs"
   },
   "devDependencies": {
     "typescript": "7.0.2",
