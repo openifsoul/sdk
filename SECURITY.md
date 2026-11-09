@@ -9,6 +9,6 @@ Report vulnerabilities privately to the repository maintainer
 [h3lpkey](https://github.com/h3lpkey). Do not open a public issue containing secrets
 or working exploit details. Repository security settings are managed separately.
 
-The frozen normative contracts and runtime threat model belong to
+The current normative contracts and runtime threat model belong to
 [Core](https://github.com/openifsoul/core). No compatibility or security guarantee
 for third-party game integrations is implied by the synthetic conformance tests.

@@ -2,24 +2,28 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   BRIDGE_VERSION,
-  LEGACY_BRIDGE_VERSION,
   IFSOUL_VERSION,
   createGameBridge,
   scenarioResponse,
   validBridgeRequest,
 } from "../src/bridge.js";
-test("current writer and explicit legacy mode keep exact validated request versions without retry", async () => {
-  for (const version of [undefined, LEGACY_BRIDGE_VERSION] as const) {
+test("current writer rejects obsolete or unknown request versions without retry", async () => {
+  {
     const sent: string[] = [];
     const bridge = createGameBridge({
       hostId: "external",
       character: { id: "original", name: "Original", temperament: "curious" },
-      version,
       transport: async (request) => {
         sent.push(request.version);
         assert(validBridgeRequest(request));
+        for (const version of [
+          "ifsoul-bridge/0.1",
+          "ifsoul-bridge/0.3.0",
+          "ifsoul-app-memory/0.4.0",
+        ])
+          assert(!validBridgeRequest({ ...request, version }));
         assert(
-          !validBridgeRequest({ ...request, version: "ifsoul-bridge/9.9" }),
+          !validBridgeRequest({ ...request, version: "ifsoul-bridge/9.9" })
         );
         return scenarioResponse(request);
       },
@@ -34,15 +38,16 @@ test("current writer and explicit legacy mode keep exact validated request versi
       choices: [{ id: "wait", label: "Wait" }],
       fallbackChoiceId: "wait",
     });
-    assert.deepEqual(sent, [version ?? BRIDGE_VERSION]);
+    assert.deepEqual(sent, [BRIDGE_VERSION]);
     bridge.dispose();
   }
-  assert.equal(IFSOUL_VERSION, "0.3.0");
+  assert.equal(IFSOUL_VERSION, "0.4.0");
 });
 
 test("old server rejects a current request with actionable error and no hidden fallback/retry", async () => {
-  const { createHTTPTransport, BridgeRequestError } =
-    await import("../src/bridge.js");
+  const { createHTTPTransport, BridgeRequestError } = await import(
+    "../src/bridge.js"
+  );
   let posts = 0;
   const transport = createHTTPTransport(
     "https://example.test/api/bridge",
@@ -50,9 +55,9 @@ test("old server rejects a current request with actionable error and no hidden f
       posts++;
       return Response.json(
         { ok: false, error: { code: "invalid-request" } },
-        { status: 400 },
+        { status: 400 }
       );
-    },
+    }
   );
   const bridge = createGameBridge({
     hostId: "external",
@@ -88,7 +93,7 @@ test("HTTP400 explicit version error is distinct from invalid request and malfor
     [
       Response.json(
         { error: { code: "unsupported-version" } },
-        { status: 400 },
+        { status: 400 }
       ),
       "unsupported-version",
     ],
@@ -107,11 +112,11 @@ test("HTTP400 explicit version error is distinct from invalid request and malfor
       async () => {
         calls++;
         return response;
-      },
+      }
     );
     await assert.rejects(
       transport(request, new AbortController().signal),
-      (e) => (e as { code: string }).code === code,
+      (e) => (e as { code: string }).code === code
     );
     assert.equal(calls, 1);
   }

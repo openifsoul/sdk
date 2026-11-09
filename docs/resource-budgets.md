@@ -2,8 +2,8 @@
 
 The SDK remains usable by arbitrary browser/Node hosts. It owns bounded transport,
 not model inference, private quotas or host mechanics. The current
-`ifsoul-bridge/0.3.0` envelope uses the common release identifier; default bounds
-and validated legacy request support remain. See [compatibility](compatibility.md).
+`ifsoul-bridge/0.4.0` envelope uses the common release identifier; default bounds
+remain; obsolete format requests reject. See [compatibility](compatibility.md).
 
 | Field                                                | Default   | Unit/meaning                      |
 | ---------------------------------------------------- | --------- | --------------------------------- |
@@ -45,7 +45,7 @@ connections do not need this endpoint. Requested and advertised bounds are
 intersected. `onBudget` observes requested/effective values; the actual request
 must fit the effective policy. No field inside an envelope can raise a ceiling.
 
-Capability metadata uses `ifsoul-bridge-resource-policy/0.3.0`, names the existing
+Capability metadata uses `ifsoul-bridge-resource-policy/0.4.0`, names the existing
 bridge envelope version and the `buffered-json` transport. It contains finite
 capacity metadata, not identity, credentials, permissions or raw quota ledgers.
 A custom transport remains host-owned and must implement its own authenticated
@@ -73,7 +73,7 @@ The built-in transport supports at most 64 MiB per buffered JSON request/respons
 configuration above it explicitly rejects as `unsupported-policy` before sending.
 This is an implementation boundary, not a model token or machine-memory claim.
 It is not a streamed 1 GiB pipeline. Buffered parsing needs additional memory
-copies; no 1 GiB allocation or end-to-end run is part of the acceptance evidence.
+copies.
 Larger streamed/chunked messages need a separately implemented transport/contract.
 
 HTTP response reads reject an excessive Content-Length before accumulation and
@@ -82,7 +82,7 @@ cancel chunked bodies when their running byte count exceeds the effective limit.
 transport failures that become labelled fallback. Abort/disposal still suppresses
 late delivery. Cancellation cannot prove remote inference stopped.
 
-An App adapter may advertise smaller structural bounds because frozen Core
+An App adapter may advertise smaller structural bounds because current Core
 messages remain limited. A larger SDK byte budget does not override those
 contracts, App retention or model context. See the
 [App guide](https://github.com/openifsoul/app/blob/main/docs/resource-budgets.md) and

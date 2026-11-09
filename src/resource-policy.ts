@@ -1,7 +1,7 @@
 /** Buffered transport support boundary, not a model context or hardware claim. */
 export const BUFFERED_JSON_MAX_BYTES = 64 * 1024 * 1024;
 export const BRIDGE_POLICY_VERSION =
-  "ifsoul-bridge-resource-policy/0.3.0" as const;
+  "ifsoul-bridge-resource-policy/0.4.0" as const;
 export interface BridgeLimits {
   maxRequestBytes: number;
   maxResponseBytes: number;
@@ -31,8 +31,8 @@ export const DEFAULT_BRIDGE_LIMITS: Readonly<BridgeLimits> = Object.freeze({
   maxReportChars: 600,
 });
 export interface BridgeCapabilities {
-  version: typeof BRIDGE_POLICY_VERSION | "ifsoul-bridge-resource-policy/0.1";
-  envelopeVersion: "ifsoul-bridge/0.3.0" | "ifsoul-bridge/0.1";
+  version: typeof BRIDGE_POLICY_VERSION;
+  envelopeVersion: "ifsoul-bridge/0.4.0";
   transport: "buffered-json";
   limits: BridgeLimits;
   bufferedMaxBytes: number;
@@ -40,7 +40,7 @@ export interface BridgeCapabilities {
 export interface BridgeBudgetReport {
   requested: BridgeLimits;
   effective: BridgeLimits;
-  source: "legacy" | "host" | "server-capability";
+  source: "defaults" | "host" | "server-capability";
   transport: "buffered-json";
   bufferedMaxBytes: number;
 }
@@ -49,14 +49,14 @@ export class BridgeBudgetError extends Error {
     readonly code: "unsupported-policy" | "budget-exceeded" | "configuration",
     readonly layer: string,
     readonly field: string,
-    message?: string,
+    message?: string
   ) {
     super(message ?? `${code}: ${layer}.${field}`);
   }
 }
 export function resolveBridgeLimits(
   requested: Partial<BridgeLimits> = {},
-  capability?: BridgeCapabilities,
+  capability?: BridgeCapabilities
 ): BridgeBudgetReport {
   if (!requested || typeof requested !== "object" || Array.isArray(requested))
     throw new BridgeBudgetError("configuration", "bridge", "object-required");
@@ -91,16 +91,14 @@ export function resolveBridgeLimits(
     return {
       requested: limits,
       effective: { ...limits },
-      source: Object.keys(requested).length ? "host" : "legacy",
+      source: Object.keys(requested).length ? "host" : "defaults",
       transport: "buffered-json",
       bufferedMaxBytes: BUFFERED_JSON_MAX_BYTES,
     };
   if (
     !(
-      (capability.version === BRIDGE_POLICY_VERSION &&
-        capability.envelopeVersion === "ifsoul-bridge/0.3.0") ||
-      (capability.version === "ifsoul-bridge-resource-policy/0.1" &&
-        capability.envelopeVersion === "ifsoul-bridge/0.1")
+      capability.version === BRIDGE_POLICY_VERSION &&
+      capability.envelopeVersion === "ifsoul-bridge/0.4.0"
     ) ||
     capability.transport !== "buffered-json" ||
     !Number.isSafeInteger(capability.bufferedMaxBytes) ||
@@ -110,22 +108,22 @@ export function resolveBridgeLimits(
     throw new BridgeBudgetError(
       "unsupported-policy",
       "server-capability",
-      "version-or-transport",
+      "version-or-transport"
     );
   const accepted = resolveBridgeLimits(capability.limits).effective;
   const effective = Object.fromEntries(
     Object.entries(limits).map(([key, value]) => [
       key,
       Math.min(value, accepted[key as keyof BridgeLimits]),
-    ]),
+    ])
   ) as unknown as BridgeLimits;
   effective.maxRequestBytes = Math.min(
     effective.maxRequestBytes,
-    capability.bufferedMaxBytes,
+    capability.bufferedMaxBytes
   );
   effective.maxResponseBytes = Math.min(
     effective.maxResponseBytes,
-    capability.bufferedMaxBytes,
+    capability.bufferedMaxBytes
   );
   return {
     requested: limits,
@@ -137,15 +135,15 @@ export function resolveBridgeLimits(
 }
 export function needsServerCapability(limits: BridgeLimits): boolean {
   return Object.entries(limits).some(
-    ([key, value]) => value > DEFAULT_BRIDGE_LIMITS[key as keyof BridgeLimits],
+    ([key, value]) => value > DEFAULT_BRIDGE_LIMITS[key as keyof BridgeLimits]
   );
 }
 export function bridgeCapabilities(
-  limits: Partial<BridgeLimits> = {},
+  limits: Partial<BridgeLimits> = {}
 ): BridgeCapabilities {
   return {
     version: BRIDGE_POLICY_VERSION,
-    envelopeVersion: "ifsoul-bridge/0.3.0",
+    envelopeVersion: "ifsoul-bridge/0.4.0",
     transport: "buffered-json",
     limits: resolveBridgeLimits(limits).effective,
     bufferedMaxBytes: BUFFERED_JSON_MAX_BYTES,

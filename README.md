@@ -1,12 +1,14 @@
 # @ifsoul/adapter-sdk
 
-Experimental installable **IfSoul 0.3.0**. This package builds ESM
-JavaScript and TypeScript declarations and supports browser hosts and Node 22+
-test hosts without a game engine, account, provider or adjacent Core checkout.
-It has **not been published to npm**. Install a supplied local archive:
+Bounded character dialogue and decision bridges for browser and Node.js hosts.
+IfSoul 0.4.0 includes ESM JavaScript and TypeScript declarations. Use Node.js
+22.18 or newer for Node hosts; no game engine, account, provider or Core checkout
+is required for the deterministic scenario transport.
+
+## Install
 
 ```sh
-pnpm add ./ifsoul-adapter-sdk-0.3.0.tgz
+npm install @ifsoul/adapter-sdk@0.4.0
 ```
 
 ```ts
@@ -33,9 +35,9 @@ bounded to 64 characters (for example `fr` or `ja-JP`). A tag requests language;
 it does not prove provider support. Generic synthetic speech currently has English
 and Russian copy; other tags receive neutral English speech.
 
-The application envelope is `ifsoul-bridge/0.3.0`, distinct from the frozen
-normative v0.2 protocol and not an archive format or full EnvironmentBridge
-handshake. Public declarations describe its exact current shape.
+The application envelope is `ifsoul-bridge/0.4.0`. It is not an archive format or
+full EnvironmentBridge handshake. Public declarations describe its current shape;
+see [compatibility](docs/compatibility.md) for supported versions.
 
 - A decision advertises at most eight unique host-owned choices and one allowed
   fallback. A response cannot introduce another choice. Speak/chat have no action
@@ -52,7 +54,7 @@ handshake. Public declarations describe its exact current shape.
   does not prove remote inference or host execution stopped.
 - `report` deduplicates IDs within a connection and forwards at most 128 bounded
   observations. Reports/history are untrusted browser text, not authoritative
-  v0.2 execution receipts. `onSpeech` means callback receipt, not confirmed
+  protocol execution receipts. `onSpeech` means callback receipt, not confirmed
   display, adoption or human reading.
 
 ```ts
@@ -101,12 +103,6 @@ From this independent SDK checkout, run `pnpm install --frozen-lockfile`,
 These commands do not publish. Package consumers install compiled files and need
 no TypeScript compiler at runtime.
 
-Before a registry release, the three local example distributions explicitly
-bundle this SDK and Website consumes reviewed versioned archives. Those artifacts
-are a small local bootstrap mechanism, not central hosting for third-party game
-implementations. Publication, registry availability and stable API compatibility
-are not implied by a local archive or successful build.
-
 Full profile/identity negotiation, general intents, authoritative host adoption
 and reconciliation, confirmed remote cancellation, permanent-memory transport
 and commercial-game connectors remain outside this package. Server authentication,
@@ -142,15 +138,8 @@ pnpm demo:host
 pnpm pack
 ```
 
-Release checks and builds run locally. GitHub Actions checks on push and pull
-requests are authorized by the [execution policy](docs/deployment.md); activation
-and a passing result require an actual published workflow run. Distribution uses
-reviewed pinned tarballs with SHA-256 provenance in each consumer; npm publication
-is not configured. The original three game packages remain compatible with this
-experimental SDK signatures. The generic scenario behavior intentionally replaces
-the earlier built-in three-game fiction; consumers requiring authored domain reactions
-must supply their own scenario transport/fallback. This is an experimental behavioral
-change, not a frozen normative protocol change. See [agent policy](AGENTS.md).
+The generic scenario behavior is deliberately neutral. Hosts needing authored
+domain reactions supply their own scenario transport or fallback.
 
 ### Non-browser hosts
 
@@ -200,10 +189,8 @@ example shells currently offer scenario play or an already configured
 provider/model/language/timeout settings. An integrator can pass `language` and
 `requestTimeoutMs` directly to `createGameBridge` in its own composition.
 
-A staged [Minecraft + Mineflayer bridge guide](docs/mineflayer-bridge.md) explains
-host identity, observations, budgets and acceptance work. It is a research and
-implementation guide; native acceptance and supported releases belong to the
-owning adapter’s documented evidence.
+The [Minecraft + Mineflayer bridge guide](docs/mineflayer-bridge.md) describes
+host identity, observations, transport and resource-budget integration.
 
 ## Server-side memory continuity
 
@@ -219,10 +206,8 @@ The legacy alias allows hosts to set `createGameBridge({ requestTimeoutMs })` to
 
 For operator-configured limits, runtime server capability and the supported buffered boundary, see [resource budgets](docs/resource-budgets.md). Default envelopes remain unchanged; larger HTTP packets do not imply larger model context.
 
-## Current release and compatibility
+## Compatibility
 
-The current coordinated release is **IfSoul 0.3.0**. Package, current-format and
-artifact identifiers share this release. Historical formats remain explicit
-compatibility inputs; matching release numbers do not make different format
-families interchangeable. See [compatibility](docs/compatibility.md).
-Registry publication and deployment are separate authorized release actions.
+See [compatibility](docs/compatibility.md) for supported bridge inputs and
+migration. Matching release identifiers do not make different format families
+interchangeable.

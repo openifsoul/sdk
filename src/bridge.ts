@@ -9,7 +9,7 @@ import type {
   BridgeBudgetReport,
 } from "./resource-policy.js";
 export * from "./resource-policy.js";
-import { BRIDGE_VERSION, LEGACY_BRIDGE_VERSION } from "./port.js";
+import { BRIDGE_VERSION } from "./port.js";
 import type {
   BridgeRequest,
   BridgeResponse,
@@ -24,7 +24,7 @@ export class BridgeRequestError extends Error {
     "request-rejected";
   constructor() {
     super(
-      "The server rejected this bridge request. Check its supported IfSoul version and request shape; no downgrade or retry was attempted.",
+      "The server rejected this bridge request. Check its supported IfSoul version and request shape; no downgrade or retry was attempted."
     );
   }
 }
@@ -63,11 +63,11 @@ const validAttribution = (value: {
           typeof claim === "object" &&
           !Array.isArray(claim) &&
           Object.keys(claim).every((key) =>
-            ["subject", "key", "value"].includes(key),
+            ["subject", "key", "value"].includes(key)
           ) &&
           ["actor", "recipient"].includes(claim.subject) &&
           ["role", "preference"].includes(claim.key) &&
-          bounded(claim.value, 160),
+          bounded(claim.value, 160)
       ))) &&
   (value.actorCharacterId === undefined || id(value.actorCharacterId)) &&
   (value.actorCharacterName === undefined ||
@@ -75,11 +75,11 @@ const validAttribution = (value: {
   [value.actor, value.observer, value.recipient].every(
     (role) =>
       role === undefined ||
-      ["user", "agent", "host", "unknown"].includes(role as string),
+      ["user", "agent", "host", "unknown"].includes(role as string)
   );
 export function validBridgeRequest(
   value: unknown,
-  policy?: Partial<BridgeLimits>,
+  policy?: Partial<BridgeLimits>
 ): value is BridgeRequest {
   const limits = resolveBridgeLimits(policy).effective;
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -99,12 +99,12 @@ export function validBridgeRequest(
           "choices",
           "fallbackChoiceId",
           "history",
-        ].includes(k),
+        ].includes(k)
     )
   )
     return false;
   return (
-    (r.version === BRIDGE_VERSION || r.version === LEGACY_BRIDGE_VERSION) &&
+    r.version === BRIDGE_VERSION &&
     id(r.hostId) &&
     (r.memoryId === undefined || id(r.memoryId)) &&
     (r.language === undefined || languageTag(r.language)) &&
@@ -113,7 +113,7 @@ export function validBridgeRequest(
     bounded(r.context, limits.maxContextChars) &&
     !!r.character &&
     Object.keys(r.character).every((k) =>
-      ["id", "name", "temperament"].includes(k),
+      ["id", "name", "temperament"].includes(k)
     ) &&
     id(r.character.id) &&
     bounded(r.character.name, 80) &&
@@ -125,7 +125,7 @@ export function validBridgeRequest(
         c &&
         Object.keys(c).every((k) => ["id", "label"].includes(k)) &&
         id(c.id) &&
-        bounded(c.label, 160),
+        bounded(c.label, 160)
     ) &&
     new Set(r.choices.map((c) => c.id)).size === r.choices.length &&
     (r.operation === "decide"
@@ -151,7 +151,7 @@ export function validBridgeRequest(
             "eventKind",
             "reportedClaims",
             "perspectiveCharacterId",
-          ].includes(k),
+          ].includes(k)
         ) &&
         validAttribution(h) &&
         (h.eventKind === undefined ||
@@ -159,7 +159,7 @@ export function validBridgeRequest(
         id(h.id) &&
         id(h.hostId) &&
         bounded(h.summary, limits.maxHistorySummaryChars) &&
-        ["observation", "user", "agent"].includes(h.kind),
+        ["observation", "user", "agent"].includes(h.kind)
     ) &&
     new TextEncoder().encode(JSON.stringify(r)).length <= limits.maxRequestBytes
   );
@@ -167,7 +167,7 @@ export function validBridgeRequest(
 export function validBridgeResponse(
   value: unknown,
   request: BridgeRequest,
-  policy?: Partial<BridgeLimits>,
+  policy?: Partial<BridgeLimits>
 ): value is BridgeResponse {
   const limits = resolveBridgeLimits(policy).effective;
   if (!value || typeof value !== "object") return false;
@@ -185,7 +185,7 @@ export function validBridgeResponse(
 /** Generic synthetic response. Domain-authored scenarios belong to the host composition. */
 export function scenarioResponse(
   request: BridgeRequest,
-  source: BridgeResponse["source"] = "scenario",
+  source: BridgeResponse["source"] = "scenario"
 ): BridgeResponse {
   return {
     choiceId: request.fallbackChoiceId,
@@ -205,8 +205,6 @@ export function createGameBridge(options: {
   hostId: string;
   memoryId?: string;
   language?: string;
-  /** Explicit upgrade-window option; never automatically downgraded or retried. */
-  version?: typeof BRIDGE_VERSION | typeof LEGACY_BRIDGE_VERSION;
   character: GameCharacter;
   transport: BridgeTransport;
   /** Optional host-authored fallback; validated and always labelled fallback. */
@@ -235,7 +233,7 @@ export function createGameBridge(options: {
     throw new BridgeBudgetError(
       "configuration",
       "bridge",
-      "conflicting-timeout",
+      "conflicting-timeout"
     );
   const limits = resolveBridgeLimits({
     ...options.limits,
@@ -267,7 +265,7 @@ export function createGameBridge(options: {
       context: string;
       choices?: BridgeRequest["choices"];
       fallbackChoiceId?: string;
-    },
+    }
   ) {
     if (signal.aborted)
       throw new DOMException("Bridge disconnected", "AbortError");
@@ -278,7 +276,7 @@ export function createGameBridge(options: {
       requestIds.set(request.requestId, `${connectionId}-${++sequence}`);
     }
     const input: BridgeRequest = {
-      version: options.version ?? BRIDGE_VERSION,
+      version: BRIDGE_VERSION,
       hostId: options.hostId,
       ...(options.memoryId ? { memoryId: options.memoryId } : {}),
       ...(options.language ? { language: options.language } : {}),
@@ -323,7 +321,7 @@ export function createGameBridge(options: {
         "budget-exceeded",
         "bridge-request",
         "configured-envelope",
-        "Unsupported or oversized bridge request",
+        "Unsupported or oversized bridge request"
       );
     const deadline = AbortSignal.any([
       signal,
@@ -337,7 +335,7 @@ export function createGameBridge(options: {
         new Promise<never>((_, reject) => {
           abort = () =>
             reject(
-              new DOMException("Bridge cancelled or timed out", "AbortError"),
+              new DOMException("Bridge cancelled or timed out", "AbortError")
             );
           deadline.addEventListener("abort", abort, { once: true });
           if (deadline.aborted) abort();
@@ -423,7 +421,7 @@ export function createGameBridge(options: {
 async function boundedReply(
   response: Response,
   maximum: number,
-  signal: AbortSignal,
+  signal: AbortSignal
 ): Promise<unknown> {
   const length = Number(response.headers.get("content-length"));
   if (length > maximum) {
@@ -432,7 +430,7 @@ async function boundedReply(
       "budget-exceeded",
       "http-response",
       "maxResponseBytes",
-      "Oversized bridge reply",
+      "Oversized bridge reply"
     );
   }
   const reader = response.body?.getReader();
@@ -445,7 +443,7 @@ async function boundedReply(
   });
   const abort = () =>
     rejectAbort(
-      new DOMException("Bridge cancelled or timed out", "AbortError"),
+      new DOMException("Bridge cancelled or timed out", "AbortError")
     );
   signal.addEventListener("abort", abort, { once: true });
   if (signal.aborted) abort();
@@ -461,7 +459,7 @@ async function boundedReply(
           "budget-exceeded",
           "http-response",
           "maxResponseBytes",
-          "Oversized bridge reply",
+          "Oversized bridge reply"
         );
       chunks.push(part.value);
     }
@@ -488,7 +486,7 @@ export function createHTTPTransport(
     capabilityEndpoint?: string;
     serverCapability?: BridgeCapabilities;
     onBudget?: (report: BridgeBudgetReport) => void;
-  } = {},
+  } = {}
 ): BridgeTransport {
   const requested = resolveBridgeLimits(options.limits).effective;
   let capability: BridgeCapabilities | undefined;
@@ -502,13 +500,13 @@ export function createHTTPTransport(
         const endpointURL = new URL(endpoint, "http://ifsoul-relative.invalid");
         const capabilityURL = new URL(
           options.capabilityEndpoint ?? "/api/resource-policy",
-          endpointURL,
+          endpointURL
         );
         if (capabilityURL.origin !== endpointURL.origin)
           throw new BridgeBudgetError(
             "unsupported-policy",
             "server-capability",
-            "origin",
+            "origin"
           );
         const target =
           endpointURL.origin === "http://ifsoul-relative.invalid"
@@ -524,7 +522,7 @@ export function createHTTPTransport(
           throw new BridgeBudgetError(
             "unsupported-policy",
             "server-capability",
-            "unavailable",
+            "unavailable"
           );
         }
         const metadata = (await boundedReply(response, 16384, signal)) as {
@@ -534,7 +532,7 @@ export function createHTTPTransport(
           throw new BridgeBudgetError(
             "unsupported-policy",
             "server-capability",
-            "missing",
+            "missing"
           );
         return metadata.bridge;
       })());
@@ -560,9 +558,9 @@ export function createHTTPTransport(
           Math.max(
             1,
             Math.ceil(
-              report.effective.timeoutMs - (performance.now() - started),
-            ),
-          ),
+              report.effective.timeoutMs - (performance.now() - started)
+            )
+          )
         ),
       ]);
     try {
@@ -574,7 +572,7 @@ export function createHTTPTransport(
       throw new BridgeBudgetError(
         "budget-exceeded",
         "bridge-request",
-        "configured-envelope",
+        "configured-envelope"
       );
     const response = await fetcher(endpoint, {
       method: "POST",
@@ -590,7 +588,7 @@ export function createHTTPTransport(
           body = (await boundedReply(
             response,
             report.effective.maxResponseBytes,
-            signal,
+            signal
           )) as typeof body;
         } catch {
           throw new BridgeRequestError();
@@ -605,7 +603,7 @@ export function createHTTPTransport(
     const result = await boundedReply(
       response,
       report.effective.maxResponseBytes,
-      signal,
+      signal
     );
     if (!validBridgeResponse(result, request, report.effective))
       throw Error("Invalid bridge reply");

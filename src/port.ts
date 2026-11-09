@@ -1,9 +1,7 @@
 import type { GameCharacter } from "./host-port.js";
-export const IFSOUL_VERSION = "0.3.0" as const;
-export const BRIDGE_VERSION = "ifsoul-bridge/0.3.0" as const;
-export const LEGACY_BRIDGE_VERSION = "ifsoul-bridge/0.1" as const;
-export type BridgeVersion =
-  typeof BRIDGE_VERSION | typeof LEGACY_BRIDGE_VERSION;
+export const IFSOUL_VERSION = "0.4.0" as const;
+export const BRIDGE_VERSION = "ifsoul-bridge/0.4.0" as const;
+export type BridgeVersion = typeof BRIDGE_VERSION;
 /** Participant roles are claims from the reporting host, not verified identity. */
 export type EventParticipant = "user" | "agent" | "host" | "unknown";
 /** Host-reported participant claim, never independently verified world truth. */
@@ -52,5 +50,5 @@ export interface BridgeResponse {
 }
 export type BridgeTransport = (
   request: BridgeRequest,
-  signal: AbortSignal,
+  signal: AbortSignal
 ) => Promise<BridgeResponse>;

@@ -5,7 +5,7 @@ const read = async (name) =>
 const release = await read("release.json");
 const manifest = await read("package.json");
 assert.equal(manifest.version, release.version);
-assert.equal(release.version, "0.3.0");
+assert.equal(release.version, "0.4.0");
 for (const value of Object.values(release.current))
   assert(value === release.version || value.endsWith("/" + release.version));
 for (const [name, pin] of Object.entries({
@@ -15,7 +15,7 @@ for (const [name, pin] of Object.entries({
   if (name.startsWith("@ifsoul/") && pin.startsWith("file:"))
     assert(
       pin.endsWith("-" + release.version + ".tgz"),
-      name + " stale release pin",
+      name + " stale release pin"
     );
 console.log(manifest.name + " release " + release.version + " aligned");
 
@@ -28,10 +28,10 @@ assert.deepEqual(
     "bridgeResourcePolicy",
     "appResourcePolicy",
     "appMemory",
-  ].sort(),
+  ].sort()
 );
-assert.deepEqual(release.legacy, {
-  protocol: ["draft-0.1.0", "draft-0.2.0"],
-  bridge: ["ifsoul-bridge/0.1"],
-  appMemory: ["ifsoul-app-memory/0.1"],
-});
+assert.equal(
+  Object.hasOwn(release, "legacy"),
+  false,
+  "Obsolete format allowlists must not return"
+);

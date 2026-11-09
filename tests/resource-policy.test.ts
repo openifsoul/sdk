@@ -10,7 +10,7 @@ import {
 } from "../src/bridge.js";
 import type { BridgeRequest } from "../src/bridge.js";
 const request: BridgeRequest = {
-  version: "ifsoul-bridge/0.1",
+  version: "ifsoul-bridge/0.4.0",
   hostId: "original-host",
   requestId: "r1",
   character: { id: "companion", name: "Mira", temperament: "careful" },
@@ -40,11 +40,11 @@ test("32KB request requires explicit host limits and runtime server capability b
         source: "llm",
       });
     },
-    { limits: high },
+    { limits: high }
   );
   assert.equal(
     (await transport(large, new AbortController().signal)).source,
-    "llm",
+    "llm"
   );
   assert.deepEqual(calls, [
     "GET:https://example.test/api/resource-policy",
@@ -52,7 +52,7 @@ test("32KB request requires explicit host limits and runtime server capability b
   ]);
 });
 
-test("legacy transport does not negotiate; absent or lower capability rejects increased envelope without POST", async () => {
+test("default-budget transport does not negotiate; absent or lower capability rejects increased envelope without POST", async () => {
   let posts = 0;
   const legacy = createHTTPTransport("/api/bridge", async (_url, init) => {
     posts++;
@@ -71,14 +71,14 @@ test("legacy transport does not negotiate; absent or lower capability rejects in
           ? new Response("", { status: 404 })
           : Response.json({ bridge: bridgeCapabilities() });
       },
-      { limits: high },
+      { limits: high }
     );
     await assert.rejects(
       transport(large, new AbortController().signal),
       (error: unknown) =>
         error instanceof BridgeBudgetError &&
         (error.code === "unsupported-policy" ||
-          error.code === "budget-exceeded"),
+          error.code === "budget-exceeded")
     );
   }
 });
@@ -87,11 +87,11 @@ test("buffered 1GiB policy is explicitly unsupported without allocation; unknown
   assert.throws(
     () => resolveBridgeLimits({ maxRequestBytes: 1024 ** 3 }),
     (error: unknown) =>
-      error instanceof BridgeBudgetError && error.code === "unsupported-policy",
+      error instanceof BridgeBudgetError && error.code === "unsupported-policy"
   );
   assert.throws(
     () => resolveBridgeLimits({ untrusted: 100 } as never),
-    /configuration/,
+    /configuration/
   );
   assert.equal(DEFAULT_BRIDGE_LIMITS.maxRequestBytes, 8000);
   assert.equal(DEFAULT_BRIDGE_LIMITS.timeoutMs, 18000);
@@ -115,10 +115,10 @@ test("HTTP declared and chunked response overflow cancels before accumulating th
               cancelled++;
             },
           },
-          { highWaterMark: 0 },
+          { highWaterMark: 0 }
         ),
-        { headers: { "content-length": "10000" } },
-      ),
+        { headers: { "content-length": "10000" } }
+      )
   );
   await assert.rejects(
     declared(request, new AbortController().signal),
@@ -126,7 +126,7 @@ test("HTTP declared and chunked response overflow cancels before accumulating th
       error instanceof BridgeBudgetError &&
       error.code === "budget-exceeded" &&
       error.layer === "http-response" &&
-      error.field === "maxResponseBytes",
+      error.field === "maxResponseBytes"
   );
   assert.equal(pulls, 0);
   assert.equal(cancelled, 1);
@@ -144,10 +144,10 @@ test("HTTP declared and chunked response overflow cancels before accumulating th
               cancelled++;
             },
           },
-          { highWaterMark: 0 },
-        ),
+          { highWaterMark: 0 }
+        )
       ),
-    { limits: { maxResponseBytes: 1000 } },
+    { limits: { maxResponseBytes: 1000 } }
   );
   await assert.rejects(
     chunked(request, new AbortController().signal),
@@ -155,7 +155,7 @@ test("HTTP declared and chunked response overflow cancels before accumulating th
       error instanceof BridgeBudgetError &&
       error.code === "budget-exceeded" &&
       error.layer === "http-response" &&
-      error.field === "maxResponseBytes",
+      error.field === "maxResponseBytes"
   );
   assert.equal(pulls, 2);
   assert.equal(cancelled, 2);
@@ -178,9 +178,9 @@ test("HTTP body cancellation returns even when the injected fetch/body ignores a
               return new Promise(() => {});
             },
           },
-          { highWaterMark: 0 },
-        ),
-      ),
+          { highWaterMark: 0 }
+        )
+      )
   );
   const pending = transport(request, abort.signal);
   const timer = setTimeout(() => abort.abort(), 10);
@@ -188,7 +188,7 @@ test("HTTP body cancellation returns even when the injected fetch/body ignores a
     await assert.rejects(
       pending,
       (error: unknown) =>
-        error instanceof DOMException && error.name === "AbortError",
+        error instanceof DOMException && error.name === "AbortError"
     );
   } finally {
     clearTimeout(timer);
@@ -207,7 +207,7 @@ test("an already-cancelled HTTP request never invokes even an abort-ignoring inj
   await assert.rejects(
     transport(request, abort.signal),
     (error: unknown) =>
-      error instanceof DOMException && error.name === "AbortError",
+      error instanceof DOMException && error.name === "AbortError"
   );
   assert.equal(calls, 0);
 });

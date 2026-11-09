@@ -22,7 +22,7 @@ async function main() {
     process.env.IFSOUL_BRIDGE_RESOURCE_POLICY_FILE
   )
     throw new DemoConfigurationError(
-      "Select one bridge resource policy source.",
+      "Select one bridge resource policy source."
     );
   const policyText =
     process.env.IFSOUL_BRIDGE_RESOURCE_POLICY ??
@@ -35,7 +35,7 @@ async function main() {
       resolveBridgeLimits(configuredLimits);
     } catch {
       throw new DemoConfigurationError(
-        "The bridge resource policy must be a supported bounded JSON object.",
+        "The bridge resource policy must be a supported bounded JSON object."
       );
     }
   }
@@ -60,7 +60,7 @@ async function main() {
       !/^[A-Za-z0-9@][A-Za-z0-9@._:/-]{0,127}$/.test(model)
     )
       throw new DemoConfigurationError(
-        "Server mode requires IFSOUL_DEMO_PROVIDER=ollama|openai|cloudflare and IFSOUL_DEMO_MODEL set to an available model. Configure the provider in App Settings first.",
+        "Server mode requires IFSOUL_DEMO_PROVIDER=ollama|openai|cloudflare and IFSOUL_DEMO_MODEL set to an available model. Configure the provider in App Settings first."
       );
     requestTimeoutMs = provider === "ollama" ? 60000 : undefined;
     const token = process.env.IFSOUL_DEMO_TOKEN;
@@ -91,11 +91,11 @@ async function main() {
           ? {
               onBudget: (report) =>
                 console.log(
-                  JSON.stringify({ event: "resource-policy", ...report }),
+                  JSON.stringify({ event: "resource-policy", ...report })
                 ),
             }
           : {}),
-      },
+      }
     );
   }
   const controller = new AbortController(),
@@ -159,7 +159,7 @@ main().catch((error: unknown) => {
   console.error(
     error instanceof DemoConfigurationError
       ? error.message
-      : "Test host failed. Check endpoint, authentication, and host prerequisites; credentials are never printed.",
+      : "Test host failed. Check endpoint, authentication, and host prerequisites; credentials are never printed."
   );
   process.exitCode = 1;
 });
