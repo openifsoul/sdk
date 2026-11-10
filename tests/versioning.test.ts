@@ -23,7 +23,7 @@ test("current writer rejects obsolete or unknown request versions without retry"
         ])
           assert(!validBridgeRequest({ ...request, version }));
         assert(
-          !validBridgeRequest({ ...request, version: "ifsoul-bridge/9.9" })
+          !validBridgeRequest({ ...request, version: "ifsoul-bridge/9.9" }),
         );
         return scenarioResponse(request);
       },
@@ -41,13 +41,12 @@ test("current writer rejects obsolete or unknown request versions without retry"
     assert.deepEqual(sent, [BRIDGE_VERSION]);
     bridge.dispose();
   }
-  assert.equal(IFSOUL_VERSION, "0.4.0");
+  assert.equal(IFSOUL_VERSION, "0.5.0");
 });
 
 test("old server rejects a current request with actionable error and no hidden fallback/retry", async () => {
-  const { createHTTPTransport, BridgeRequestError } = await import(
-    "../src/bridge.js"
-  );
+  const { createHTTPTransport, BridgeRequestError } =
+    await import("../src/bridge.js");
   let posts = 0;
   const transport = createHTTPTransport(
     "https://example.test/api/bridge",
@@ -55,9 +54,9 @@ test("old server rejects a current request with actionable error and no hidden f
       posts++;
       return Response.json(
         { ok: false, error: { code: "invalid-request" } },
-        { status: 400 }
+        { status: 400 },
       );
-    }
+    },
   );
   const bridge = createGameBridge({
     hostId: "external",
@@ -93,7 +92,7 @@ test("HTTP400 explicit version error is distinct from invalid request and malfor
     [
       Response.json(
         { error: { code: "unsupported-version" } },
-        { status: 400 }
+        { status: 400 },
       ),
       "unsupported-version",
     ],
@@ -112,12 +111,40 @@ test("HTTP400 explicit version error is distinct from invalid request and malfor
       async () => {
         calls++;
         return response;
-      }
+      },
     );
     await assert.rejects(
       transport(request, new AbortController().signal),
-      (e) => (e as { code: string }).code === code
+      (e) => (e as { code: string }).code === code,
     );
     assert.equal(calls, 1);
+  }
+});
+
+test("definite authentication/policy/conflict rejections never become fallback speech", async () => {
+  const { createHTTPTransport, BridgeRequestError } =
+    await import("../src/bridge.js");
+  for (const status of [401, 403, 409]) {
+    let speech = 0;
+    const bridge = createGameBridge({
+      hostId: "host",
+      character: { id: "original", name: "Original", temperament: "quiet" },
+      transport: createHTTPTransport(
+        "https://example.test/api/bridge",
+        async () => Response.json({ error: { code: "policy" } }, { status }),
+      ),
+      history: () => [],
+      onObservation: () => {},
+      onSpeech: () => {
+        speech++;
+      },
+      signal: new AbortController().signal,
+    });
+    try {
+      await assert.rejects(bridge.chat("A request"), BridgeRequestError);
+      assert.equal(speech, 0);
+    } finally {
+      bridge.dispose();
+    }
   }
 });

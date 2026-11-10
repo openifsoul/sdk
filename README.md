@@ -1,14 +1,14 @@
 # @ifsoul/adapter-sdk
 
 Bounded character dialogue and decision bridges for browser and Node.js hosts.
-IfSoul 0.4.0 includes ESM JavaScript and TypeScript declarations. Use Node.js
+IfSoul 0.5.0 includes ESM JavaScript and TypeScript declarations. Use Node.js
 22.18 or newer for Node hosts; no game engine, account, provider or Core checkout
 is required for the deterministic scenario transport.
 
 ## Install
 
 ```sh
-npm install @ifsoul/adapter-sdk@0.4.0
+npm install @ifsoul/adapter-sdk@0.5.0
 ```
 
 ```ts
@@ -211,3 +211,8 @@ For operator-configured limits, runtime server capability and the supported buff
 See [compatibility](docs/compatibility.md) for supported bridge inputs and
 migration. Matching release identifiers do not make different format families
 interchangeable.
+
+See [participant sessions](docs/sessions.md) for the additive trusted session API.
+
+See [behavior configuration and dynamic parameters](docs/behavior.md) for shared goals,
+reaction policy and evidence-linked state.
