@@ -1,6 +1,6 @@
 # Minecraft host integration
 
-The [Minecraft player bridge](https://github.com/openifsoul/bridge-minecraft)
+The [Minecraft Mineflayer bridge](https://github.com/openifsoul/bridge-minecraft-mineflayer)
 composes the bounded SDK with a Mineflayer player connection. Install and configure
 that repository according to its setup reference.
 
