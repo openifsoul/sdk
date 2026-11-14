@@ -16,7 +16,7 @@ test("SDK archive installs and exposes runtime/types outside Core without regist
   try {
     await mkdir(path.join(directory, "vendor"));
     await copyFile(
-      path.join(root, ".local/packages/ifsoul-adapter-sdk-0.5.0.tgz"),
+      path.join(root, ".local/packages/ifsoul-adapter-sdk-0.6.0.tgz"),
       path.join(directory, "vendor/sdk.tgz")
     );
     await writeFile(

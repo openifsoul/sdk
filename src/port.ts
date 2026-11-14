@@ -1,5 +1,5 @@
 import type { GameCharacter } from "./host-port.js";
-export const IFSOUL_VERSION = "0.5.0" as const;
+export const IFSOUL_VERSION = "0.6.0" as const;
 export const BRIDGE_VERSION = "ifsoul-bridge/0.4.0" as const;
 export type BridgeVersion = typeof BRIDGE_VERSION;
 /** Participant roles are claims from the reporting host, not verified identity. */

@@ -19,3 +19,9 @@ work or charges have stopped.
 
 See [bridge resource budgets](resource-budgets.md) and the
 [App memory reference](https://github.com/openifsoul/app/blob/main/docs/memory.md).
+
+The App also supports server-side connector profiles for Citizens, Easy NPC,
+CustomNPCs Unofficial and MineColonies. They use the App's scoped device API
+from Java and do not import this SDK. See the
+[App compatibility and setup guide](https://github.com/openifsoul/app/blob/main/docs/game-connections.md)
+for pinned versions and native verification status.

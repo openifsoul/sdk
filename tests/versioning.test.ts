@@ -41,7 +41,7 @@ test("current writer rejects obsolete or unknown request versions without retry"
     assert.deepEqual(sent, [BRIDGE_VERSION]);
     bridge.dispose();
   }
-  assert.equal(IFSOUL_VERSION, "0.5.0");
+  assert.equal(IFSOUL_VERSION, "0.6.0");
 });
 
 test("old server rejects a current request with actionable error and no hidden fallback/retry", async () => {
