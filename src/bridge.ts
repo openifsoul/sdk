@@ -18,6 +18,8 @@ import type {
 } from "./port.js";
 import type { GameBridge, GameCharacter } from "./host-port.js";
 export * from "./port.js";
+export * from "./capabilities.js";
+export type * from "./adventure.js";
 export type * from "./host-port.js";
 export class BridgeRequestError extends Error {
   readonly code: "request-rejected" | "unsupported-version" =

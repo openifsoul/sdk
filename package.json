@@ -1,6 +1,6 @@
 {
   "name": "@ifsoul/adapter-sdk",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Experimental bounded IfSoul browser-host bridge and transport contracts",
   "type": "module",
   "license": "Apache-2.0",

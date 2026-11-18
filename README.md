@@ -216,3 +216,6 @@ See [participant sessions](docs/sessions.md) for the additive trusted session AP
 
 See [behavior configuration and dynamic parameters](docs/behavior.md) for shared goals,
 reaction policy and evidence-linked state.
+
+See [host capability discovery](docs/host-capabilities.md) for connected-host
+action descriptors and their authorization and reporting lifecycle.
